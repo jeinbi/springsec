@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+	   xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/security/oauth2 
+		http://www.springframework.org/schema/security/spring-security-oauth2.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+		">
+	<import resource="redis-services.xml"/>
+	<import resource="oauth2-services.xml"/>	
+		
+	<oauth:resource-server id="prodResourceAuthTokenChecker" resource-id="productdomain" token-services-ref="tokenServices"/>  
+
+	<security:authentication-manager>
+		<security:authentication-provider>
+			<security:user-service>
+				<security:user name="jimi" password="jimispassword" authorities="ROLE_CUSTOMER, ROLE_ADMIN" />
+				<security:user name="bob" password="bobspassword" authorities="ROLE_CUSTOMER" />
+			</security:user-service>
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+	<security:http use-expressions="false" pattern="/**" create-session="never" entry-point-ref="oauth2AuthenticationEntryPoint"  access-decision-manager-ref="oauth2AccessDecisionManager">  
+		<security:anonymous enabled="false"/>  
+		<security:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>  
+		<security:custom-filter ref="prodResourceAuthTokenChecker" before="PRE_AUTH_FILTER"/>  
+		<security:access-denied-handler ref="oauth2AccessDeniedHandler"/>  
+	</security:http>  	
+</beans>		

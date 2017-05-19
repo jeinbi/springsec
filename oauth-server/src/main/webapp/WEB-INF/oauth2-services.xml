@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+	   xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/security/oauth2 
+		http://www.springframework.org/schema/security/spring-security-oauth2.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+		">
+	<alias name="standartPasswordEncoder" alias="clientSecretEncoder" />
+	<bean id="standartPasswordEncoder" class="org.springframework.security.crypto.password.NoOpPasswordEncoder" />
+	
+	<alias name="defaultOauth2ClientIdAuthenticationManager" alias="oauth2ClientIdAuthenticationManager" />
+	<security:authentication-manager id="defaultOauth2ClientIdAuthenticationManager">
+		<security:authentication-provider user-service-ref="oauthClientDetailsUserService">
+			<security:password-encoder ref="clientSecretEncoder" />
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+	
+	<alias name="defaultOauthClientDetailsUserService" alias="oauthClientDetailsUserService" />
+	<bean id="defaultOauthClientDetailsUserService"
+		  class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
+		<constructor-arg index="0"><ref bean="oauthClientDetails"/></constructor-arg>	
+		<property name="passwordEncoder" ref="clientSecretEncoder"></property>
+	</bean>	
+	
+	
+	<alias name="defaultOauthClientDetails" alias="oauthClientDetails" />
+	<bean id="defaultOauthClientDetails" class="org.wispersd.core.security.oauth2.service.RedisClientDetailsService" init-method="init">
+		<property name="redisTemplate" ref="oauthClientDetailsRedisTemplate"></property>
+	</bean>
+	
+	
+	<alias name="defaultAuthorizationCode" alias="oauthAuthorizationCode" />
+	<bean id="defaultAuthorizationCode" class="org.wispersd.core.security.oauth2.service.RedisAuthorizationCodeServices">
+		<property name="redisTemplate" ref="oauthAuthCodeRedisTemplate"></property>
+	</bean>
+	
+	
+	<bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+		<property name="supportRefreshToken" value="true"></property>
+		<property name="tokenStore" ref="redisTokenStore"></property>
+		<!--  
+		<property name="refreshTokenValiditySeconds" value=""></property>
+		<property name="accessTokenValiditySeconds" value=""></property>
+		-->
+	</bean>
+	
+	<bean id="redisTokenStore" class="org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore">
+		<constructor-arg index="0">
+			<ref bean="redisConnectionFactory"/>
+		</constructor-arg>
+	</bean>
+	
+	
+	<bean id="oauth2ExceptionRender" class="org.springframework.security.oauth2.provider.error.DefaultOAuth2ExceptionRenderer">
+		<property name="messageConverters">
+			<list>
+				<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter" />
+				<bean class="org.springframework.security.oauth2.http.converter.jaxb.JaxbOAuth2ExceptionMessageConverter" />
+				<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="writeAcceptCharset" value="false"></property>
+				</bean>
+				<bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter" />
+			</list>
+		</property>
+	</bean>	
+	
+	
+	<alias name="defaultOauthAuthenticationEntryPoint" alias="oauth2AuthenticationEntryPoint" />
+	<bean id="defaultOauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+		<property name="realmName" value="TestSOA"></property>
+		<property name="typeName" value="Basic"></property>
+		<property name="exceptionRenderer" ref="oauth2ExceptionRender"></property>
+	</bean>	  	
+	
+	
+	<bean id="oauth2AccessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler">
+		<property name="exceptionRenderer" ref="oauth2ExceptionRender"></property>
+	</bean>
+</beans>		

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+	   xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/security/oauth2 
+		http://www.springframework.org/schema/security/spring-security-oauth2.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+		">
+	<bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+		<property name="supportRefreshToken" value="true"></property>
+		<property name="tokenStore" ref="redisTokenStore"></property>
+		<!--  
+		<property name="refreshTokenValiditySeconds" value=""></property>
+		<property name="accessTokenValiditySeconds" value=""></property>
+		-->
+	</bean>	
+		
+	<bean id="redisTokenStore" class="org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore">
+		<constructor-arg index="0">
+			<ref bean="redisConnectionFactory"/>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="oauth2ExceptionRender" class="org.springframework.security.oauth2.provider.error.DefaultOAuth2ExceptionRenderer">
+		<property name="messageConverters">
+			<list>
+				<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter" />
+				<bean class="org.springframework.security.oauth2.http.converter.jaxb.JaxbOAuth2ExceptionMessageConverter" />
+				<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="writeAcceptCharset" value="false"></property>
+				</bean>
+				<bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter" />
+			</list>
+		</property>
+	</bean>	
+	
+	<alias name="defaultOauthAuthenticationEntryPoint" alias="oauth2AuthenticationEntryPoint" />
+	<bean id="defaultOauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+		<property name="realmName" value="TestSOA"></property>
+		<property name="typeName" value="Basic"></property>
+		<property name="exceptionRenderer" ref="oauth2ExceptionRender"></property>
+	</bean>	  	
+	
+	<bean id="oauth2AccessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler">
+		<property name="exceptionRenderer" ref="oauth2ExceptionRender"></property>
+	</bean>
+	
+	
+	<bean id="oauth2AccessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">  
+        <constructor-arg>  
+            <list>  
+                <bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter"/>  
+                <bean class="org.springframework.security.access.vote.RoleVoter"/>  
+                <bean class="org.springframework.security.access.vote.AuthenticatedVoter"/>  
+            </list>  
+        </constructor-arg>  
+    </bean>  
+</beans>		

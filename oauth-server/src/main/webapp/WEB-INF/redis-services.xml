@@ -1,0 +1,51 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+		   
+	<bean id="propertyConfigurerRedis" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">   
+        <property name="order" value="1" />   
+        <property name="ignoreUnresolvablePlaceholders" value="true" />   
+        <property name="location">   
+           <value>classpath:/redisconf.properties</value>   
+        </property>   
+    </bean>
+		   
+		   
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxTotal" value="${redis.pool.maxTotal}"></property>
+		<property name="minIdle" value="${redis.pool.minIdle}"></property>
+		<property name="maxIdle" value="${redis.pool.maxIdle}"></property>
+	</bean>		
+	
+	
+	<alias name="jedisConnectionFactory" alias="redisConnectionFactory" />
+	<bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<constructor-arg index="0" type="redis.clients.jedis.JedisPoolConfig"><ref bean="jedisPoolConfig"/></constructor-arg>
+		<property name="hostName" value="${redis.host}"></property>
+		<property name="port" value="${redis.port}"></property>	
+	</bean>	 
+	
+	<bean id="oauthClientDetailsRedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="redisConnectionFactory"></property>
+		<property name="hashKeySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+		</property>
+		<property name="hashValueSerializer">
+			<bean class="org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer">
+				<constructor-arg index="0" type="java.lang.Class" value="org.springframework.security.oauth2.provider.client.BaseClientDetails">
+				</constructor-arg>
+			</bean>
+		</property>
+	</bean>  	
+	
+	<bean id="oauthAuthCodeRedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="redisConnectionFactory"></property>
+		<property name="hashKeySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+		</property>
+		<property name="hashValueSerializer">
+			<bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"></bean>
+		</property>
+	</bean>   
+</beans>		   

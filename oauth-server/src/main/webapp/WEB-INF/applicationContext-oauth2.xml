@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc"	
+       xmlns:security="http://www.springframework.org/schema/security"
+	   xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/security/oauth2 
+		http://www.springframework.org/schema/security/spring-security-oauth2.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+		">
+	<!-- http://blog.csdn.net/monkeyking1987/article/details/16828059 -->	
+	
+	<import resource="redis-services.xml"/>
+	<import resource="oauth2-services.xml"/>
+	
+	<mvc:annotation-driven />
+    <mvc:default-servlet-handler />
+	 
+	<oauth:authorization-server client-details-service-ref="oauthClientDetails"
+								token-endpoint-url="/oauth/token"
+								authorization-endpoint-url="/oauth/authorize"
+								token-services-ref="tokenServices">
+		<oauth:authorization-code authorization-code-services-ref="oauthAuthorizationCode" />
+		<oauth:implicit />
+		<oauth:refresh-token />
+		<oauth:client-credentials />
+		<oauth:password />
+	</oauth:authorization-server>	
+	
+	
+	<security:http pattern="/oauth/token"  disable-url-rewriting="true" use-expressions="false" create-session="stateless" authentication-manager-ref="oauth2ClientIdAuthenticationManager"  
+	 entry-point-ref="oauth2AuthenticationEntryPoint">  
+		<security:csrf disabled="true"/>
+		<security:intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY"/>  
+		<security:anonymous enabled="false"/>  
+		<security:http-basic entry-point-ref="oauth2AuthenticationEntryPoint"/>  
+		<security:access-denied-handler ref="oauth2AccessDeniedHandler"/>  
+	</security:http>
+	
+
+	<security:authentication-manager id="userpasswordAuthenticationManager">
+		<security:authentication-provider>
+			<security:user-service>
+				<security:user name="jimi" password="jimispassword" authorities="ROLE_CUSTOMER, ROLE_ADMIN" />
+				<security:user name="bob" password="bobspassword" authorities="ROLE_CUSTOMER" />
+			</security:user-service>
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+	
+	<!-- for /oauth/authorization, redirect user to normal login page if user is not authenticated  -->
+	<security:http disable-url-rewriting="true" use-expressions="false" create-session="stateless" authentication-manager-ref="userpasswordAuthenticationManager">
+		<security:csrf disabled="true"/>
+		<security:access-denied-handler error-page="/login.jsp?authorization_error=true"/>
+		<security:intercept-url pattern="/oauth/**" access="IS_AUTHENTICATED_FULLY" requires-channel="https" />
+		<security:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:form-login authentication-failure-url="/login.jsp?authentication_error=true" default-target-url="/index.jsp"
+						login-page="/login.jsp" login-processing-url="/login.do" />
+		<security:logout logout-success-url="/index.jsp" logout-url="/logout.do" />
+		<security:anonymous />
+	</security:http>	
+</beans>		
