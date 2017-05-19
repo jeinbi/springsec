@@ -1,5 +1,0 @@
-{"routeRules":[
-			   {"pattern":"/main", "controller":"MainController", "templateUrl":"main.html"},
-			   {"pattern":"/cart", "controller":"CartController", "templateUrl":"cart.html"}		
-			  ]
-}
