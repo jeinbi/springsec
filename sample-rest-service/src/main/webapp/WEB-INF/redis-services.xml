@@ -25,4 +25,17 @@
 		<property name="hostName" value="${redis.host}"></property>
 		<property name="port" value="${redis.port}"></property>	
 	</bean>	 
+	
+	<bean id="oauthClientDetailsRedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="redisConnectionFactory"></property>
+		<property name="hashKeySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+		</property>
+		<property name="hashValueSerializer">
+			<bean class="org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer">
+				<constructor-arg index="0" type="java.lang.Class" value="org.springframework.security.oauth2.provider.client.BaseClientDetails">
+				</constructor-arg>
+			</bean>
+		</property>
+	</bean>  	
 </beans>		   

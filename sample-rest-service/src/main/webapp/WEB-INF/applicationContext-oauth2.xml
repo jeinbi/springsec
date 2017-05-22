@@ -16,8 +16,9 @@
 	<import resource="redis-services.xml"/>
 	<import resource="oauth2-services.xml"/>	
 		
-	<oauth:resource-server id="prodResourceAuthTokenChecker" resource-id="productdomain" token-services-ref="tokenServices"/>  
+	<oauth:resource-server id="prodResourceAuthTokenChecker" resource-id="productdomain" token-services-ref="tokenServices" authentication-manager-ref="oAuth2AuthenticationManager"/>  
 
+	<!--  
 	<security:authentication-manager>
 		<security:authentication-provider>
 			<security:user-service>
@@ -26,8 +27,16 @@
 			</security:user-service>
 		</security:authentication-provider>
 	</security:authentication-manager>
+	-->
+	
+	<bean id="oAuth2AuthenticationManager" class="org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager">
+		<property name="resourceId" value="productdomain"/>
+		<property name="tokenServices" ref="tokenServices"/>
+		<property name="clientDetailsService" ref="oauthClientDetails"/>
+	</bean>
 
-	<security:http use-expressions="false" pattern="/**" create-session="never" entry-point-ref="oauth2AuthenticationEntryPoint"  access-decision-manager-ref="oauth2AccessDecisionManager">  
+	<security:http use-expressions="false" pattern="/**" create-session="never" entry-point-ref="oauth2AuthenticationEntryPoint"  access-decision-manager-ref="oauth2AccessDecisionManager"
+	authentication-manager-ref="oAuth2AuthenticationManager">  
 		<security:anonymous enabled="false"/>  
 		<security:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>  
 		<security:custom-filter ref="prodResourceAuthTokenChecker" before="PRE_AUTH_FILTER"/>  

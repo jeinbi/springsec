@@ -15,23 +15,25 @@
 	<security:http pattern="/css/**" security="none"/>
 	<security:http pattern="/static/**" security="none"/>
 		
-	<security:http disable-url-rewriting="true"  use-expressions="true" entry-point-ref="ajaxAwareAuthenticationEntryPoint" access-decision-manager-ref="roleAccessDecisionManager">
+	<security:http disable-url-rewriting="true"  use-expressions="true" entry-point-ref="ajaxAwareAuthenticationEntryPoint">
 		<security:anonymous username="anonymous" granted-authority="ROLE_ANONYMOUS" />
 		<security:access-denied-handler ref="ajaxAwareAccessDenyHandler"/>
 		<security:request-cache ref="ajaxAwareHttpSessionRequestCache"/>
 		<security:session-management session-fixation-protection="migrateSession" invalid-session-strategy-ref="ajaxAwareInvalidSessionStrategy" />
 		
 		<!-- security:remember-me key="yacceleratorstorefront" services-ref="rememberMeServices"/ -->
-		<!--  
+		
 		<security:intercept-url pattern="/html/template.html" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_CUSTOMER')" requires-channel="https"/>
 		<security:intercept-url pattern="/html/login.html" access="hasAnyRole('ROLE_ANONYMOUS', 'ROLE_CUSTOMER')" requires-channel="https"/>
 		<security:intercept-url pattern="/html/*" access="hasRole('ROLE_CUSTOMER')" requires-channel="https" />
 		<security:intercept-url pattern="/test*" access="hasRole('ROLE_ADMIN')" requires-channel="https" />
-		-->
+		
+		<!--  
 		<security:intercept-url pattern="/html/template.html" requires-channel="https"/>
 		<security:intercept-url pattern="/html/login.html" requires-channel="https"/>
 		<security:intercept-url pattern="/html/*" requires-channel="https" />
 		<security:intercept-url pattern="/test*" requires-channel="https" />
+		-->
 		
 		<security:form-login login-page="/html/login.html"  
 		authentication-success-handler-ref="ajaxAwareUrlAuthSuccessHandler" 
@@ -43,7 +45,7 @@
 		</security:port-mappings>
 	</security:http> 
 	
-	<security:authentication-manager>
+	<security:authentication-manager erase-credentials="false">
 		<security:authentication-provider>
 			<security:user-service>
 				<security:user name="jimi" password="jimispassword" authorities="ROLE_CUSTOMER, ROLE_ADMIN" />
@@ -89,6 +91,7 @@
 		</constructor-arg>
 	</bean>
 	
+	<!--
 	<bean id="jdbcFilterInvocationSecurityMetadataSource" class="org.wsipersd.core.security.auth.JdbcFilterInvocationSecurityMetadataSource">
 	</bean>
 	
@@ -96,6 +99,7 @@
 	<bean id="secMetaSourceInjectPostProcessor" class="org.wsipersd.core.security.auth.SecMetaSourceInjectPostProcessor">
 		<property name="securityMetadataSource" ref="jdbcFilterInvocationSecurityMetadataSource"></property>
 	</bean>
+	-->
 </beans>
 	
 	

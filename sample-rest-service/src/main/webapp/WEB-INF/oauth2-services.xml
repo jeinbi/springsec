@@ -28,6 +28,11 @@
 		</constructor-arg>
 	</bean>
 	
+	<alias name="defaultOauthClientDetails" alias="oauthClientDetails" />
+	<bean id="defaultOauthClientDetails" class="org.wispersd.core.security.oauth2.service.RedisClientDetailsService" init-method="init">
+		<property name="redisTemplate" ref="oauthClientDetailsRedisTemplate"></property>
+	</bean>
+	
 	<bean id="oauth2ExceptionRender" class="org.springframework.security.oauth2.provider.error.DefaultOAuth2ExceptionRenderer">
 		<property name="messageConverters">
 			<list>

@@ -21,6 +21,7 @@
 		<module>sample-war</module>
 		<module>oauth-server</module>
 		<module>sample-rest-service</module>
+		<module>oauth-commonservice</module>
 	</modules>
 	
 	<dependencyManagement> 

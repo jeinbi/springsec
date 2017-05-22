@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+	   xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/security/oauth2 
+		http://www.springframework.org/schema/security/spring-security-oauth2.xsd
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+		">
+	<bean id="propertyConfigurerRedis" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">   
+        <property name="order" value="1" />   
+        <property name="ignoreUnresolvablePlaceholders" value="true" />   
+        <property name="location">   
+           <value>classpath:/oauthserver.properties</value>   
+        </property>   
+    </bean>
+    	
+	<bean id="httpClient" class="org.wsipersd.core.security.web.HttpClientFactory"
+		factory-method="buildHttpClient" >
+		<constructor-arg index="0" value="200"></constructor-arg>
+		<constructor-arg index="1" value="100"></constructor-arg>
+	</bean>	
+	
+		
+	<bean id="clientHttpRequestFactory"
+		class="org.springframework.http.client.HttpComponentsClientHttpRequestFactory">
+		<constructor-arg ref="httpClient" />
+	</bean>
+		
+		
+	<bean id="bufferingClientHttpRequestFactory"
+		class="org.springframework.http.client.BufferingClientHttpRequestFactory">
+		<constructor-arg ref="clientHttpRequestFactory" />
+	</bean>
+		
+		
+		
+	<alias alias="oAuth2ProtectedResourceDetails" name="ctxResourceOwnerPasswordResourceDetails" />
+	<bean id="ctxResourceOwnerPasswordResourceDetails"
+		class="org.wispersd.core.security.oauth2.service.ContextResourceOwnerPasswordResourceDetails">
+		<property name="clientId" value="${oauth.token.clientId}" />
+		<property name="clientSecret" value="${oauth.token.clientSecret}" />
+		<property name="accessTokenUri" value="${oauth.token.accessTokenUri}" />
+	</bean>
+		
+		
+	<bean id="loggingInterceptor" class="org.wispersd.core.security.oauth2.service.LoggingInterceptor" />
+	<util:list id="interceptors" list-class="java.util.ArrayList">
+		<ref bean="loggingInterceptor" />
+	</util:list>
+		
+	<alias alias="accessTokenProviderList" name="defaultAccessTokenProviderList" />
+	<util:list id="defaultAccessTokenProviderList">
+		<bean
+			class="org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeAccessTokenProvider">
+			<property name="requestFactory" ref="bufferingClientHttpRequestFactory" />
+			<property name="interceptors" ref="interceptors" />
+		</bean>
+		<bean
+			class="org.springframework.security.oauth2.client.token.grant.implicit.ImplicitAccessTokenProvider">
+			<property name="requestFactory" ref="bufferingClientHttpRequestFactory" />
+			<property name="interceptors" ref="interceptors" />
+		</bean>
+		<bean
+			class="org.springframework.security.oauth2.client.token.grant.password.ResourceOwnerPasswordAccessTokenProvider">
+			<property name="requestFactory" ref="bufferingClientHttpRequestFactory" />
+			<property name="interceptors" ref="interceptors" />
+		</bean>
+		<bean
+			class="org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider">
+			<property name="requestFactory" ref="bufferingClientHttpRequestFactory" />
+			<property name="interceptors" ref="interceptors" />
+		</bean>
+	</util:list>
+
+	<bean id="accessTokenProviderChain"
+		class="org.springframework.security.oauth2.client.token.AccessTokenProviderChain">
+		<constructor-arg ref="accessTokenProviderList" />
+	</bean>
+	
+	<bean id="dummyOAuth2ErrorHandler" class="org.wispersd.core.security.oauth2.service.DummyOAuth2ErrorHandler">
+		<constructor-arg ref="oAuth2ProtectedResourceDetails" />
+	</bean>
+	
+		
+		
+	<alias alias="oAuth2RestTemplate" name="defaultOAuth2RestTemplate" />
+
+	<bean id="defaultOAuth2RestTemplate"
+		class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
+		<constructor-arg ref="oAuth2ProtectedResourceDetails" />
+		<property name="accessTokenProvider" ref="accessTokenProviderChain" />
+		<property name="requestFactory" ref="bufferingClientHttpRequestFactory" />
+		<property name="interceptors" ref="interceptors" />
+		<property name="errorHandler" ref="dummyOAuth2ErrorHandler" />
+		<!--  property name="messageConverters" ref="defaultMessageConvertors"/ -->
+	</bean>
+		
+</beans>		
